@@ -24,6 +24,7 @@ public class scrPlayer2 : MonoBehaviour
         startedJump,
         isHoldingJump,
         isSliding,
+        canSlide,
         canWallJump;
 
     private CharacterController cont;
@@ -51,13 +52,25 @@ public class scrPlayer2 : MonoBehaviour
         if (Input.GetButtonDown("Jump"))
             Jump();
 
-
+        
         if (velocity == 0)
         {
             NoInputRotate();
         }
-        
+
+        airVelocity = velocity;
+
+        //Move player along ground if the are grounded.
+        if (cont.isGrounded)
+        {
             MoveCharGround();
+        }
+
+        else if (!cont.isGrounded)
+        {
+            canSlide = false;
+            MoveCharAir();
+        }
 
         if (transform.position.y <= -1.3)
             Restart();
@@ -65,14 +78,26 @@ public class scrPlayer2 : MonoBehaviour
             cont.Move(new Vector3(0, yVelocity, 0) * Time.deltaTime);
             Gravity();
 
+        if (colNormal.y > 0.01f)
+        {
+            Debug.Log(colNormal.y);
+        }
 
-        if (Input.GetButton("RB") && isSliding == false)
+
+        //Sliding 
+        if(cont.isGrounded && !isSliding)
+        {
+            canSlide = true;
+        }
+
+        if (Input.GetButtonDown("RB") && canSlide == true)
         {
             Slide();
         }
-        else
+
+        if(isSliding == true)
         {
-            extraSpeed = Mathf.Lerp(extraSpeed, 1, 0.7f);
+            WhileSliding();
         }
         
         //If the player is colliding with a wall, allow them to walljump.
@@ -82,12 +107,9 @@ public class scrPlayer2 : MonoBehaviour
         Debug.DrawRay(transform.position, transform.forward, Color.red);
         Debug.DrawRay(transform.position, localMove, Color.green);
 
-        colNormal.y = 0;
+        //colNormal.y = 0;
         Debug.DrawRay(cubeTrans1.position, colNormal, Color.cyan);
-
-        //Debug.Log(Vector3.Dot(Vector3.up, colNormal.normalized));
-        
-        Debug.Log(canWallJump);
+        //Debug.Log("forawrd: " + transform.forward + "... localMove:  " + localMove);
     }
 
 
@@ -103,7 +125,7 @@ public class scrPlayer2 : MonoBehaviour
         //Damp rotation of character
         Damp(localMove);
 
-        //Get new speed value (does not seem to work correctly)
+        //Get new speed value
         velocity = DampSpeed(localMove);
 
         cont.Move(((transform.forward * Time.deltaTime) * velocity) * extraSpeed);
@@ -113,7 +135,7 @@ public class scrPlayer2 : MonoBehaviour
             velocity = 0;
 
         //If the angle between the stick and the player's direction is larger than 150 degrees, incur a skid penalty.
-        if (Vector3.Angle(transform.forward, localMove) >= 150 && velocity != 0 && cont.isGrounded)
+        if (Vector3.Angle(transform.forward, localMove) >= 130 && velocity != 0 && cont.isGrounded)
             SkidTurnaround();
     }
 
@@ -124,13 +146,12 @@ public class scrPlayer2 : MonoBehaviour
             localMove = localMove.normalized;
         }
 
-        //Keep character rotation the same
-        transform.forward = transform.forward;
-
         //Get the speed with acceleration significantly lower
-        velocity = DampSpeed(localMove, 1.2f);
+        airVelocity = DampSpeed(localMove);
 
-        cont.Move(((-transform.position * Time.deltaTime) * velocity) * extraSpeed);
+        cont.Move((transform.forward * Time.deltaTime)* airVelocity);
+
+        
     }
     
 
@@ -194,7 +215,7 @@ public class scrPlayer2 : MonoBehaviour
             transform.forward *= -1;
             float skidVelocity = (velocity * -1);
 
-            velocity = skidVelocity;   
+            velocity = skidVelocity / 2;   
     }
 
 
@@ -318,24 +339,25 @@ public class scrPlayer2 : MonoBehaviour
 
     void Slide()
     {
-        extraSpeed = Mathf.Lerp(extraSpeed, 1.5f, 0.7f);
-        //transform.Rotate(Quaternion.Lerp(transform.rotation, new Quaternion(65, 0, 0), 0.7f));
+        extraSpeed = 2.7f;
+        isSliding = true;
+        canSlide = false;
     }
 
     void WhileSliding()
     {
-        extraSpeed = Mathf.Lerp(extraSpeed, 1, 0.5f);
+        extraSpeed = Mathf.Lerp(extraSpeed, 1, 0.1f);
 
-        if(extraSpeed <= 1)
+        if (extraSpeed <= 1.02f)
         {
             extraSpeed = 1;
         }
-
-
+        
 
         if(extraSpeed == 1)
         {
             isSliding = false;
+            canSlide = true;
         }
     }
 
@@ -376,7 +398,7 @@ public class scrPlayer2 : MonoBehaviour
     }
     
     
-
+    //If the player collides with a "Wall" object, allow the player to walljump.
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.gameObject.tag == "Wall")
@@ -390,6 +412,20 @@ public class scrPlayer2 : MonoBehaviour
             colNormal = hit.normal.normalized;
         }
 
+        if(hit.gameObject.tag == "ptfmRotate" || hit.gameObject.tag == "ptfmVertical" || hit.gameObject.tag == "ptfmHoriz")
+        {
+
+        }
+
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.tag == "ptfmRotate" || collision.gameObject.tag == "ptfmVertical" || collision.gameObject.tag == "ptfmHoriz")
+        {
+            Debug.Log("works");
+        }
     }
     
+
 }
