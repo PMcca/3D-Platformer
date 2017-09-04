@@ -40,7 +40,7 @@ public class scrPlatforms : MonoBehaviour {
         if ((other.gameObject.tag == "Player") && other.GetComponent<CharacterController>().isGrounded)
         {
             other.transform.parent = transform;
-            Debug.Log("worksSs");
+            //Debug.Log("worksSs");
         }
     }
 
@@ -48,7 +48,7 @@ public class scrPlatforms : MonoBehaviour {
     {
         if (other.gameObject.tag == "Player")
         {
-            Debug.Log("Exit" + other.GetComponent<CharacterController>().isGrounded);
+            //Debug.Log("Exit" + other.GetComponent<CharacterController>().isGrounded);
             other.transform.parent = null;
         }
     }

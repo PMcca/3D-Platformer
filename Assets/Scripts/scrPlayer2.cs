@@ -17,7 +17,8 @@ public class scrPlayer2 : MonoBehaviour
     private float
         yVelocity,
         velocity = 0f,
-        airVelocity = 0f,
+        airForward,
+        airRight,
         acceleration = 2.5f,
         extraSpeed = 1;
     private bool
@@ -28,7 +29,7 @@ public class scrPlayer2 : MonoBehaviour
         canWallJump;
 
     private CharacterController cont;
-    private Vector3 originalPos, localMove, colNormal, colHitPoint;
+    private Vector3 originalPos, localMove, colNormal, airMovement;
 
 
     private void Start()
@@ -58,7 +59,6 @@ public class scrPlayer2 : MonoBehaviour
             NoInputRotate();
         }
 
-        airVelocity = velocity;
 
         //Move player along ground if the are grounded.
         if (cont.isGrounded)
@@ -109,7 +109,6 @@ public class scrPlayer2 : MonoBehaviour
 
         //colNormal.y = 0;
         Debug.DrawRay(cubeTrans1.position, colNormal, Color.cyan);
-        //Debug.Log("forawrd: " + transform.forward + "... localMove:  " + localMove);
     }
 
 
@@ -126,7 +125,7 @@ public class scrPlayer2 : MonoBehaviour
         Damp(localMove);
 
         //Get new speed value
-        velocity = DampSpeed(localMove);
+        velocity = DampSpeed(velocity);
 
         cont.Move(((transform.forward * Time.deltaTime) * velocity) * extraSpeed);
 
@@ -146,19 +145,19 @@ public class scrPlayer2 : MonoBehaviour
             localMove = localMove.normalized;
         }
 
-        //Get the speed with acceleration significantly lower
-        airVelocity = DampSpeed(localMove);
+        velocity = DampSpeedAir(velocity);
 
-        cont.Move((transform.forward * Time.deltaTime)* airVelocity);
-
+        airForward = Vector3.Dot(transform.forward, localMove);
+        airRight = Vector3.Dot(transform.right, localMove);
         
+        airMovement = (transform.forward * velocity) + ((transform.right) * (airRight * 0.9f));
+
+        cont.Move(airMovement * Time.deltaTime);
     }
-    
 
     //Dampen turn rate when moving stick from one angle to another.
     void Damp(Vector3 original)
     {
-        Vector3 forward = transform.TransformDirection(Vector3.forward);
 
         //newRatio is 90% of the time between the last frame.
         float newRatio = 0.9f * Time.deltaTime * 8;
@@ -172,7 +171,7 @@ public class scrPlayer2 : MonoBehaviour
     }
 
     
-    float DampSpeed(Vector3 original)
+    float DampSpeed(float originalVelocity)
     {
         //Double the character's deceleration when there is no input and the character is grounded.
         if (!checkForInput() && cont.isGrounded)
@@ -186,22 +185,24 @@ public class scrPlayer2 : MonoBehaviour
         float new_ratio = 0.9f * Time.deltaTime * acceleration;
         float old_ratio = 1 - new_ratio;
 
-        float newSpeed = (velocity * old_ratio) + (desiredSpeed * new_ratio);
+        float newSpeed = (originalVelocity * old_ratio) + (desiredSpeed * new_ratio);
 
         newSpeed = Mathf.Clamp(newSpeed, -maxSpeed * extraSpeed, maxSpeed * extraSpeed);
 
         return newSpeed;
     }
 
-    //Overloaded DampSpeed which allows the accelaration to be set via argument.
-    float DampSpeed(Vector3 original, float accelP)
+    //Overloaded DampSpeed
+    float DampSpeedAir(float originalVelocity)
     {
-        float desiredSpeed = maxSpeed * new Vector3(getXAxis(), 0, getZAxis()).magnitude;
+        acceleration = 1.5f;
 
-        float new_ratio = 0.9f * Time.deltaTime * accelP;
+        float desiredSpeed = maxSpeed * airForward;
+
+        float new_ratio = 0.9f * Time.deltaTime * acceleration;
         float old_ratio = 1 - new_ratio;
 
-        float newSpeed = (velocity * old_ratio) + (desiredSpeed * new_ratio);
+        float newSpeed = (originalVelocity * old_ratio) + (desiredSpeed * new_ratio);
 
         newSpeed = Mathf.Clamp(newSpeed, -maxSpeed * extraSpeed, maxSpeed * extraSpeed);
 
@@ -407,8 +408,6 @@ public class scrPlayer2 : MonoBehaviour
             {
                 canWallJump = true;
             }
-            
-            colHitPoint = hit.point;
             colNormal = hit.normal.normalized;
         }
 
@@ -417,14 +416,6 @@ public class scrPlayer2 : MonoBehaviour
 
         }
 
-    }
-
-    private void OnCollisionStay(Collision collision)
-    {
-        if (collision.gameObject.tag == "ptfmRotate" || collision.gameObject.tag == "ptfmVertical" || collision.gameObject.tag == "ptfmHoriz")
-        {
-            Debug.Log("works");
-        }
     }
     
 
