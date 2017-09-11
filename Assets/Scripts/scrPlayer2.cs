@@ -20,7 +20,8 @@ public class scrPlayer2 : MonoBehaviour
         airForward,
         airRight,
         acceleration = 2.5f,
-        extraSpeed = 1;
+        extraSpeed = 1,
+        timer;
     private bool
         startedJump,
         isHoldingJump,
@@ -83,7 +84,6 @@ public class scrPlayer2 : MonoBehaviour
             Debug.Log(colNormal.y);
         }
 
-
         //Sliding 
         if(cont.isGrounded && !isSliding)
         {
@@ -109,6 +109,9 @@ public class scrPlayer2 : MonoBehaviour
 
         //colNormal.y = 0;
         Debug.DrawRay(cubeTrans1.position, colNormal, Color.cyan);
+
+        Util.StartTimer(3);
+        Debug.Log(Util.TimerStatus());
     }
 
 
@@ -152,7 +155,7 @@ public class scrPlayer2 : MonoBehaviour
         
         airMovement = (transform.forward * velocity) + ((transform.right) * (airRight * 0.9f));
 
-        cont.Move(airMovement * Time.deltaTime);
+        cont.Move((airMovement * extraSpeed) * Time.deltaTime);
     }
 
     //Dampen turn rate when moving stick from one angle to another.
@@ -192,7 +195,7 @@ public class scrPlayer2 : MonoBehaviour
         return newSpeed;
     }
 
-    //Overloaded DampSpeed
+    //Dampen speed for aerial mobility
     float DampSpeedAir(float originalVelocity)
     {
         acceleration = 1.5f;
@@ -343,6 +346,7 @@ public class scrPlayer2 : MonoBehaviour
         extraSpeed = 2.7f;
         isSliding = true;
         canSlide = false;
+        Util.StartTimer(0.2f);
     }
 
     void WhileSliding()
@@ -397,6 +401,8 @@ public class scrPlayer2 : MonoBehaviour
         }
         else return false;
     }
+
+   
     
     
     //If the player collides with a "Wall" object, allow the player to walljump.

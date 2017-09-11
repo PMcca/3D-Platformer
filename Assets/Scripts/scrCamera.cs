@@ -13,7 +13,8 @@ public class scrCamera : MonoBehaviour {
 
     private float
         currentX,
-        currentY;
+        currentY,
+        timer;
 
     private const float Y_MIN = -15f, Y_MAX = 50f;
 
