@@ -1,5 +1,5 @@
 # Unity 3D Platformer
-![Unity Image](https://i.imgur.com/HFTYTgp.png) 
+[![Unity Image](https://i.imgur.com/dr4g1ID.png)](https://imgur.com/a/eQajr)
 
 A 3D platformer prototype, created in Unity, inspired by Mario 64. The game has a key focus on movement, 
 with the intention of exploring primary mechanics to create deeper and more intricate gameplay.
